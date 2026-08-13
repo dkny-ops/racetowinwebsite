@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race To Win</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:hidden;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#000;
+}
+
+
+    canvas{
+    width:100vw;
+    height:100vh;
+    display:block;
+}
+
+
+#hud{
+    position:absolute;
+    top:15px;
+    left:15px;
+    color:white;
+    font-size:clamp(14px, 4vw, 24px);
+    font-weight:bold;
+    text-shadow:2px 2px 5px black;
+    z-index:10;
+    display:none;
+}
+
+#startScreen{
+    position:absolute;
+    inset:0;
+
+    background:
+    linear-gradient(
+        rgba(0,0,0,0.35),
+        rgba(0,0,0,0.75)
+    );
+
+    color:white;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    z-index:20;
+}
+
+#menuPanel{
+    width:min(450px, calc(100vw - 30px));
+    max-height:calc(100vh - 30px);
+
+    box-sizing:border-box;
+
+    background:rgba(0,0,0,0.35);
+
+    backdrop-filter:blur(8px);
+
+    border-radius:25px;
+
+    padding:clamp(20px, 5vw, 40px);
+
+    text-align:center;
+
+    overflow-y:auto;
+    scrollbar-width:none;
+
+    animation:
+        panelFloat 4s ease-in-out infinite,
+        borderGlow 3s ease-in-out infinite;
+
+    border:1px solid rgba(0,212,255,0.25);
+
+    box-shadow:
+        0 0 25px rgba(0,212,255,0.15),
+        0 0 60px rgba(0,212,255,0.08);
+}
+
+#scoresMenuPanel{
+    width:450px;
+    background:rgba(0,0,0,0.35);
+    backdrop-filter:blur(8px);
+    border-radius:25px;
+    padding:40px;
+    text-align:center;
+    color:white;
+    min-width:350px;
+    max-height:80vh;
+    overflow-y:auto;
+    scrollbar-width:none;
+    border:1px solid rgba(0,212,255,0.25);
+    box-shadow:0 0 25px rgba(0,212,255,0.15), 0 0 60px rgba(0,212,255,0.08);
+    animation:panelFloat 4s ease-in-out infinite, borderGlow 3s ease-in-out infinite;
+}
+
+#scoresMenuPanel::-webkit-scrollbar{
+    display:none;
+}
+
+#gameTitle{
+    font-size:54px;
+    font-weight:900;
+    letter-spacing:8px;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    line-height:1;
+    text-shadow:0 0 10px rgba(255,255,255,0.3), 0 0 25px rgba(0,212,255,0.35);
+}
+
+#subTitle{
+    font-size:20px;
+    color:#cccccc;
+    margin-bottom:35px;
+}
+
+#startScreen h1{
+    font-size:60px;
+    margin-bottom:20px;
+}
+
+#startScreen p{
+    font-size:24px;
+    margin:8px;
+}
+
+#startBtn{
+    width:220px;
+    padding:16px;
+    font-size:24px;
+    font-weight:bold;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    color:white;
+    background:linear-gradient(90deg, #0099ff, #00d4ff);
+    box-shadow:0 0 20px rgba(0,212,255,0.5);
+    transition:0.3s;
+}
+
+#startBtn:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 35px rgba(0,212,255,0.8);
+}
+
+#gameOver{
+    position:absolute;
+    inset:0;
+
+    display:none;
+
+    justify-content:center;
+    align-items:center;
+
+    background:rgba(0,0,0,0.65);
+
+    backdrop-filter:blur(5px);
+
+    z-index:30;
+}
+
+
+#gameOverPanel{
+
+    width:450px;
+
+    padding:40px;
+
+    background:rgba(0,0,0,0.75);
+
+    border-radius:25px;
+
+    text-align:center;
+
+    border:2px solid rgba(0,212,255,0.6);
+
+    box-shadow:
+        0 0 30px rgba(0,212,255,0.25),
+        0 0 70px rgba(0,212,255,0.12);
+
+}
+
+
+#gameOverPanel h1{
+
+    font-size:70px;
+
+    line-height:0.95;
+
+    margin-bottom:35px;
+
+    color:#ff4545;
+
+    text-shadow:
+        0 0 15px rgba(255,60,60,0.5);
+
+}
+
+
+#gameOverScore{
+
+    font-size:32px;
+
+    color:white;
+
+    margin-bottom:15px;
+
+}
+
+
+#gameOverHighScore{
+
+    font-size:22px;
+
+    color:#00d4ff;
+
+    margin-bottom:35px;
+
+}
+
+
+#extraLifeBtn{
+
+    display:block;
+
+    width:260px;
+
+    height:60px;
+
+    margin:0 auto 15px auto;
+
+    border:none;
+
+    border-radius:15px;
+
+    cursor:pointer;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    color:white;
+
+    background:
+        linear-gradient(
+            90deg,
+            #00aaff,
+            #00d4ff
+        );
+
+    box-shadow:
+        0 0 20px rgba(0,212,255,0.45);
+
+}
+
+
+#playAgainBtn{
+
+    display:block;
+
+    width:260px;
+
+    height:55px;
+
+    margin:0 auto;
+
+    border:1px solid rgba(255,255,255,0.25);
+
+    border-radius:15px;
+
+    cursor:pointer;
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    color:white;
+
+    background:rgba(255,255,255,0.10);
+
+}
+
+
+#extraLifeBtn:hover{
+
+    transform:scale(1.04);
+
+    box-shadow:
+        0 0 30px rgba(0,212,255,0.7);
+
+}
+
+
+#playAgainBtn:hover{
+
+    background:rgba(255,255,255,0.20);
+
+}
+
+#scoresBtn{
+    margin-top:15px;
+    width:220px;
+    padding:12px;
+    font-size:18px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background:rgba(255,255,255,0.12);
+    color:white;
+    transition:0.3s;
+}
+
+#titleLine{
+    width:180px;
+    height:3px;
+    margin:20px auto 30px auto;
+    border-radius:10px;
+    background:linear-gradient(90deg, transparent, #00d4ff, transparent);
+    box-shadow:0 0 15px #00d4ff, 0 0 30px #00d4ff;
+}
+
+@keyframes panelFloat{
+    0%{ transform:translateY(0px); }
+    50%{ transform:translateY(-6px); }
+    100%{ transform:translateY(0px); }
+}
+
+@keyframes borderGlow{
+    0%, 100%{ box-shadow:0 0 25px rgba(0,212,255,0.15), 0 0 60px rgba(0,212,255,0.08); }
+    50%{ box-shadow:0 0 35px rgba(0,212,255,0.25), 0 0 90px rgba(0,212,255,0.15); }
+}
+
+#playerStats{
+    margin-top:15px;
+    margin-bottom:30px;
+}
+
+#playerStats p{
+    font-size:16px;
+    color:#bbbbbb;
+    letter-spacing:2px;
+    margin:10px 0;
+}
+
+#lastScore, #lastTime, #totalPoints{
+    color:white;
+    font-weight:bold;
+    font-size:24px;
+    margin-left:8px;
+}
+
+.menu-tagline{
+    margin-top:10px;
+    margin-bottom:12px;
+    text-align:center;
+    font-size:14px;
+    letter-spacing:4px;
+    color:rgba(255,255,255,0.8);
+    text-transform:uppercase;
+    animation:taglinePulse 3s ease-in-out infinite;
+}
+
+@keyframes taglinePulse{
+    0%, 100%{ opacity:0.6; }
+    50%{ opacity:1; }
+}
+
+#scoresBtn:hover{
+    background:rgba(255,255,255,0.22);
+}
+
+#hud {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+
+    color: white;
+    font-size: 22px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+
+    background: rgba(0, 0, 0, 0.45);
+    padding: 15px 25px;
+    border-radius: 15px;
+
+    border: 2px solid rgba(0,170,255,0.7);
+
+    text-shadow:
+        0 0 5px #000,
+        0 0 10px #000;
+
+    backdrop-filter: blur(5px);
+
+    letter-spacing: 1px;
+}
+
+#scoresTabs{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+#scoresTabs button{
+
+    width:180px;
+
+    padding:12px;
+
+    border:2px solid #00aaff;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    background:#202020;
+
+    color:white;
+
+    transition:0.25s;
+
+}
+
+#scoresTabs button.active{
+
+    background:#00aaff;
+
+    color:white;
+
+    box-shadow:0 0 15px #00aaff;
+
+}
+
+#scoresTabs button:hover{
+
+    background:#00aaff;
+
+    transform:scale(1.03);
+
+}
+
+/* ==================================================
+   ADAPTACION A TODAS LAS PANTALLAS
+   ================================================== */
+
+#gameTitle{
+    font-size:clamp(34px, 8vw, 54px) !important;
+    letter-spacing:clamp(3px, 1.5vw, 8px);
+}
+
+#startScreen h1{
+    font-size:clamp(34px, 8vw, 60px);
+}
+
+#startScreen p{
+    font-size:clamp(16px, 4vw, 24px);
+}
+
+#playerName{
+    width:min(220px, 80vw) !important;
+    font-size:clamp(15px, 4vw, 18px) !important;
+}
+
+#startBtn,
+#scoresBtn{
+    width:min(220px, 80vw);
+}
+
+#playerStats p{
+    font-size:clamp(13px, 3.5vw, 16px);
+}
+
+#lastScore,
+#lastTime,
+#totalPoints{
+    font-size:clamp(18px, 5vw, 24px);
+}
+
+
+/* ---------- SCORES ---------- */
+
+#scoresMenuPanel{
+
+    width:min(450px, calc(100vw - 30px));
+
+    min-width:0;
+
+    max-height:calc(100vh - 30px);
+
+    box-sizing:border-box;
+
+    padding:clamp(20px, 5vw, 40px);
+
+}
+
+#scoresMenuPanel h2{
+
+    font-size:clamp(26px, 7vw, 40px) !important;
+
+}
+
+#scoresTabs{
+
+    flex-wrap:wrap;
+
+}
+
+#scoresTabs button{
+
+    width:min(180px, 42vw);
+
+    font-size:clamp(12px, 3vw, 16px);
+
+}
+
+
+/* ---------- GAME OVER ---------- */
+
+#gameOverPanel{
+
+    width:min(450px, calc(100vw - 30px));
+
+    max-height:calc(100vh - 30px);
+
+    box-sizing:border-box;
+
+    padding:clamp(20px, 5vw, 40px);
+
+    overflow-y:auto;
+
+}
+
+#gameOverPanel h1{
+
+    font-size:clamp(42px, 12vw, 70px);
+
+    margin-bottom:clamp(20px, 5vw, 35px);
+
+}
+
+#gameOverScore{
+
+    font-size:clamp(22px, 6vw, 32px);
+
+}
+
+#gameOverHighScore{
+
+    font-size:clamp(17px, 4vw, 22px);
+
+}
+
+#extraLifeBtn,
+#playAgainBtn{
+
+    width:min(260px, 80vw);
+
+}
+
+
+/* ---------- CELULAR EN HORIZONTAL ---------- */
+
+@media (orientation:landscape) and (max-height:600px){
+
+    #menuPanel{
+
+        max-height:calc(100vh - 20px);
+
+        padding:15px 25px;
+
+    }
+
+    #gameTitle{
+
+        font-size:clamp(28px, 7vh, 44px) !important;
+
+        margin-bottom:4px;
+
+    }
+
+    .menu-tagline{
+
+        font-size:11px;
+
+        margin-top:5px;
+
+        margin-bottom:5px;
+
+    }
+
+    #titleLine{
+
+        margin:10px auto 15px auto;
+
+    }
+
+    #playerStats{
+
+        margin-top:8px;
+
+        margin-bottom:12px;
+
+    }
+
+    #playerStats p{
+
+        margin:5px 0;
+
+    }
+
+    #startBtn{
+
+        padding:10px;
+
+        font-size:20px;
+
+    }
+
+    #scoresBtn{
+
+        margin-top:8px;
+
+        padding:9px;
+
+        font-size:16px;
+
+    }
+
+    #gameOverPanel{
+
+        max-height:calc(100vh - 20px);
+
+        padding:15px 25px;
+
+    }
+
+    #gameOverPanel h1{
+
+        font-size:clamp(35px, 10vh, 55px);
+
+        margin-bottom:12px;
+
+    }
+
+    #gameOverScore{
+
+        margin-bottom:8px;
+
+    }
+
+    #gameOverHighScore{
+
+        margin-bottom:15px;
+
+    }
+
+    #extraLifeBtn{
+
+        height:48px;
+
+        margin-bottom:8px;
+
+    }
+
+    #playAgainBtn{
+
+        height:45px;
+
+    }
+
+    #menuPanel::-webkit-scrollbar{
+    display:none;
+}
+
+}
+
+</style>
+
+</head>
+<body style="touch-action:none;">
+
+<div id="hud">
+    Player: <span id="hudPlayerName">---</span><br>
+    Score: <span id="score">0</span><br>
+    Tiempo: <span id="time">0:00</span><br>
+    Distancia: <span id="distance">0</span> m
+</div>
+
+<div id="startScreen">
+    <div id="menuPanel">
+        <h1 id="gameTitle">RACE TO WIN</h1>
+        <div class="menu-tagline">DRIVE • COMPETE • WIN</div>
+        <div id="titleLine"></div>
+        <p style="margin-bottom:15px;">
+
+<br><br>
+
+<input
+id="playerName"
+type="text"
+maxlength="12"
+placeholder="Enter your name"
+style="
+width:220px;
+padding:10px;
+border-radius:10px;
+border:none;
+text-align:center;
+font-size:18px;
+">
+
+</p>
+        <div id="playerStats">
+            <p>LAST SCORE <span id="lastScore">0</span></p>
+            <p>TOTAL POINTS <span id="totalPoints">0</span></p>
+            <p>LAST TIME <span id="lastTime">0</span></p>
+        </div>
+        <button id="startBtn">PLAY</button>
+        <br>
+        <button id="scoresBtn">SCORES</button>
+    </div>
+</div>
+
+<div id="gameOver">
+
+    <div id="gameOverPanel">
+
+        <h1>GAME<br>OVER</h1>
+
+        <div id="gameOverScore">
+            Score: <span id="finalScore">0</span>
+        </div>
+
+        <div id="gameOverHighScore">
+            High Score: <span id="highScore">0</span>
+        </div>
+
+        <button id="extraLifeBtn">
+            EXTRA LIFE
+        </button>
+
+        <button id="playAgainBtn">
+            PLAY AGAIN
+        </button>
+
+    </div>
+
+</div>
+
+<div id="scoresPanel" style="position:absolute; inset:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.9); z-index:50;">
+    <div id="scoresMenuPanel">
+        <h2 style="font-size:40px; letter-spacing:4px; margin-bottom:20px;">TOP SCORES</h2>
+
+        <div id="scoresTabs">
+
+    <button id="weeklyTab">WEEKLY</button>
+
+    <button id="worldTab">🌎 WORLD PLAYERS</button>
+
+</div>
+
+        <div id="scoresList" style="margin-top:20px; margin-bottom:20px; font-size:16px;"></div>
+    
+        <h3>TOTAL: <span id="totalScore">0</span></h3>
+        <button id="closeScores" style="margin-top:25px; width:180px; height:45px; font-size:16px; cursor:pointer; display:block; margin-left:auto; margin-right:auto;">BACK TO MENU</button>
+    </div>
+</div>
+
+<div id="countdown" style="position:absolute; inset:0; display:none; justify-content:center; align-items:center; font-size:150px; font-weight:bold; color:white; text-shadow:0 0 20px black; z-index:40;">3</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<audio id="bgMusic" src="music/race.mp3" loop></audio>
+<script src="game.js"></script>
+
+
+</body>
+</html>
