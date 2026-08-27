@@ -50,3 +50,35 @@ export async function POST(request: Request) {
         );
     }
 }
+
+export async function GET() {
+    try {
+        const { data, error } = await supabase
+            .from("scores")
+            .select("id, score, player_name, created_at")
+            .eq("game_id", RACE_TO_WIN_GAME_ID)
+            .order("score", { ascending: false });
+
+        if (error) {
+            console.error("Supabase world scores error:", error);
+
+            return NextResponse.json(
+                { error: error.message },
+                { status: 500 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            data
+        });
+
+    } catch (error) {
+        console.error("World scores API error:", error);
+
+        return NextResponse.json(
+            { error: "Server error" },
+            { status: 500 }
+        );
+    }
+}

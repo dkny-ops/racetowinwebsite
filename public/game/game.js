@@ -1,4 +1,4 @@
-const scene = new THREE.Scene();
+﻿const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(
     0x87CEEB
@@ -629,7 +629,7 @@ function calculateWeeklyTotal(){
 
 
 //--------------------------------------------------
-// Patrón fijo de 300 metros
+// PatrÃ³n fijo de 300 metros
 //--------------------------------------------------
 
 const obstaclePattern = [];
@@ -658,7 +658,7 @@ for(let z = -100; z > -10000; z -= 20){
         z: z
     });
 
-    // 30% de obstáculos dobles
+    // 30% de obstÃ¡culos dobles
     if(random() < 0.08){
 
         let secondLane;
@@ -926,7 +926,7 @@ traffic = [];
 }
 
 //--------------------------------------------------
-// Crear patrón completo
+// Crear patrÃ³n completo
 //--------------------------------------------------
 
 function buildTrackPattern(){
@@ -1343,37 +1343,63 @@ scoresBtn.addEventListener("click", () => {
 
 });
 
-worldTab.addEventListener("click", () => {
+worldTab.addEventListener("click", async () => {
 
     worldTab.classList.add("active");
-weeklyTab.classList.remove("active");
+    weeklyTab.classList.remove("active");
 
-    let playerScores =
-    JSON.parse(localStorage.getItem("raceToWinPlayers")) || [];
+    scoresList.innerHTML =
+        "<p style='color:#777;'>Loading world players...</p>";
 
-    let html = "";
+    totalScoreEl.textContent = "Loading...";
 
-    if(playerScores.length === 0){
+    try {
 
-        html = "<p style='color:#777;'>No players yet</p>";
+        const response = await fetch("/api/score");
 
-    }else{
+        const result = await response.json();
 
-        for(let i = 0; i < playerScores.length; i++){
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || "Error loading world scores");
+        }
 
-            html += `
-            <p>
-            #${i + 1} - ${playerScores[i].name} - ${playerScores[i].score}
-            </p>
-            `;
+        const playerScores = result.data || [];
+
+        let html = "";
+
+        if (playerScores.length === 0) {
+
+            html = "<p style='color:#777;'>No players yet</p>";
+
+        } else {
+
+            for (let i = 0; i < playerScores.length; i++) {
+
+                html += `
+                <p>
+                #${i + 1} - ${playerScores[i].player_name} - ${playerScores[i].score}
+                </p>
+                `;
+
+            }
 
         }
 
+        scoresList.innerHTML = html;
+
+        totalScoreEl.textContent =
+            playerScores.length + " Players";
+
+    } catch (error) {
+
+        console.error("Error loading world players:", error);
+
+        scoresList.innerHTML =
+            "<p style='color:#777;'>Unable to load world players</p>";
+
+        totalScoreEl.textContent = "0 Players";
+
     }
-
-    scoresList.innerHTML = html;
-
-    totalScoreEl.textContent = playerScores.length + " Players";
 
 });
 
@@ -1593,7 +1619,7 @@ if(gameRunning){
     * 0.35;
 
     //--------------------------------------------------
-    // Tráfico fijo
+    // TrÃ¡fico fijo
     //--------------------------------------------------
 
     for(
@@ -1613,7 +1639,7 @@ if(gameRunning){
         speed * 2.5;
 
         //--------------------------------------------------
-// Colisión
+// ColisiÃ³n
 //--------------------------------------------------
 
 if(
@@ -1648,7 +1674,7 @@ if(
     }
 
     //--------------------------------------------------
-    // Líneas carretera
+    // LÃ­neas carretera
     //--------------------------------------------------
 
     for(
@@ -1717,7 +1743,7 @@ String(seconds)
 .padStart(2,"0");
 
     //--------------------------------------------------
-    // Cámara
+    // CÃ¡mara
     //--------------------------------------------------
 
     camera.position.x +=
