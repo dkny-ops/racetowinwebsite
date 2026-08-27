@@ -37,8 +37,10 @@ const extraLifeBtn = document.getElementById("extraLifeBtn");
 const playAgainBtn = document.getElementById("playAgainBtn");
 
 let extraLifeUsed = false;
+let scoreSaved = false;
 let invulnerableUntil = 0;
 let gameOverTimer;
+let scoreSaveTimer;
 
 const music = new Audio("music/race.mp3");  
 
@@ -988,25 +990,34 @@ if(gameOver) return;
 gameOver = true;
 gameRunning = false;
 
-fetch("/api/score", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        score: Math.floor(score),
-        player_name: playerName || "PLAYER"
+scoreSaveTimer = setTimeout(() => {
+
+    if (scoreSaved) return;
+
+    scoreSaved = true;
+
+    fetch("/api/score", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            score: Math.floor(score),
+            player_name: playerName || "PLAYER"
+        })
     })
-})
-.then(response => response.json())
-.then(data => {
-    if (!data.success) {
-        console.error("Error guardando score:", data.error);
-    }
-})
-.catch(error => {
-    console.error("Error conectando con Supabase:", error);
-});
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error("Error guardando score:", data.error);
+        }
+    })
+    .catch(error => {
+        console.error("Error conectando con Supabase:", error);
+    });
+
+}, 3000);
+
 
 music.pause();
 
@@ -1156,6 +1167,7 @@ gameOverTimer = setTimeout(() => {
 function startGame(){
 
     extraLifeUsed = false;
+    scoreSaved = false;
 
    totalPoints = calculateWeeklyTotal();
 totalPointsEl.textContent = totalPoints;
@@ -1412,6 +1424,7 @@ extraLifeBtn.addEventListener("click", () => {
     if(extraLifeUsed) return;
 
     clearTimeout(gameOverTimer);
+    clearTimeout(scoreSaveTimer);
 
     extraLifeUsed = true;
 
