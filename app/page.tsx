@@ -1,11 +1,17 @@
 "use client";
 
 
-
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
+
+
+
+
   return (
     <main className="min-h-screen bg-black text-white">
+
+    
 
       {/* NAVBAR */}
       <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-xl">

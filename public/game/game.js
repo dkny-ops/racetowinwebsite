@@ -988,6 +988,26 @@ if(gameOver) return;
 gameOver = true;
 gameRunning = false;
 
+fetch("/api/score", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        score: Math.floor(score),
+        player_name: playerName || "PLAYER"
+    })
+})
+.then(response => response.json())
+.then(data => {
+    if (!data.success) {
+        console.error("Error guardando score:", data.error);
+    }
+})
+.catch(error => {
+    console.error("Error conectando con Supabase:", error);
+});
+
 music.pause();
 
 music.currentTime = 0;

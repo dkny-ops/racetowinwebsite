@@ -1,4 +1,4 @@
-export default function PlayPage() {
+﻿export default function PlayPage() {
   return (
     <main
       style={{
@@ -11,7 +11,6 @@ export default function PlayPage() {
         background: "black",
       }}
     >
-
       <a
         href="/"
         style={{
@@ -30,7 +29,7 @@ export default function PlayPage() {
           backdropFilter: "blur(8px)",
         }}
       >
-        ← HOME
+        HOME
       </a>
 
       <iframe
@@ -42,7 +41,6 @@ export default function PlayPage() {
         }}
         title="Race To Win"
       />
-
     </main>
   );
 }
