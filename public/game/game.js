@@ -1,4 +1,4 @@
-﻿const scene = new THREE.Scene();
+const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(
     0x87CEEB
@@ -629,7 +629,7 @@ function calculateWeeklyTotal(){
 
 
 //--------------------------------------------------
-// PatrÃ³n fijo de 300 metros
+// Patrón fijo de 300 metros
 //--------------------------------------------------
 
 const obstaclePattern = [];
@@ -658,7 +658,7 @@ for(let z = -100; z > -10000; z -= 20){
         z: z
     });
 
-    // 30% de obstÃ¡culos dobles
+    // 30% de obstáculos dobles
     if(random() < 0.08){
 
         let secondLane;
@@ -926,7 +926,7 @@ traffic = [];
 }
 
 //--------------------------------------------------
-// Crear patrÃ³n completo
+// Crear patrón completo
 //--------------------------------------------------
 
 function buildTrackPattern(){
@@ -1002,9 +1002,10 @@ scoreSaveTimer = setTimeout(() => {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            score: Math.floor(score),
-            player_name: playerName || "PLAYER"
-        })
+        player_id: playerId,
+        score: Math.floor(score),
+        player_name: playerName || "PLAYER"
+    })
     })
     .then(response => response.json())
     .then(data => {
@@ -1377,7 +1378,7 @@ worldTab.addEventListener("click", async () => {
 
                 html += `
                 <p>
-                #${i + 1} - ${playerScores[i].player_name} - ${playerScores[i].score}
+                #${i + 1} - ${playerScores[i].player_name} - ${playerScores[i].daily_total}
                 </p>
                 `;
 
@@ -1619,7 +1620,7 @@ if(gameRunning){
     * 0.35;
 
     //--------------------------------------------------
-    // TrÃ¡fico fijo
+    // Tráfico fijo
     //--------------------------------------------------
 
     for(
@@ -1639,7 +1640,7 @@ if(gameRunning){
         speed * 2.5;
 
         //--------------------------------------------------
-// ColisiÃ³n
+// Colisión
 //--------------------------------------------------
 
 if(
@@ -1674,7 +1675,7 @@ if(
     }
 
     //--------------------------------------------------
-    // LÃ­neas carretera
+    // Líneas carretera
     //--------------------------------------------------
 
     for(
@@ -1743,7 +1744,7 @@ String(seconds)
 .padStart(2,"0");
 
     //--------------------------------------------------
-    // CÃ¡mara
+    // Cámara
     //--------------------------------------------------
 
     camera.position.x +=
@@ -1809,3 +1810,6 @@ window.addEventListener(
 
 
 );
+
+
+
