@@ -1,4 +1,4 @@
-const scene = new THREE.Scene();
+﻿const scene = new THREE.Scene();
 
 scene.background = new THREE.Color(
     0x87CEEB
@@ -75,13 +75,13 @@ if (!playerId) {
 
 playerNameInput.value = playerName;
 
-playerNameInput.addEventListener("input", () => {
-    playerName = playerNameInput.value.trim();
+if (playerName) {
+    playerNameInput.disabled = true;
+}
 
-    localStorage.setItem(
-        "raceToWinPlayerName",
-        playerName
-    );
+playerNameInput.addEventListener("input", () => {
+    if (playerNameInput.disabled) return;
+    playerName = playerNameInput.value.trim();
 });
 
 const hudPlayerName = document.getElementById("hudPlayerName");
@@ -629,7 +629,7 @@ function calculateWeeklyTotal(){
 
 
 //--------------------------------------------------
-// Patrón fijo de 300 metros
+// PatrÃ³n fijo de 300 metros
 //--------------------------------------------------
 
 const obstaclePattern = [];
@@ -658,7 +658,7 @@ for(let z = -100; z > -10000; z -= 20){
         z: z
     });
 
-    // 30% de obstáculos dobles
+    // 30% de obstÃ¡culos dobles
     if(random() < 0.08){
 
         let secondLane;
@@ -926,7 +926,7 @@ traffic = [];
 }
 
 //--------------------------------------------------
-// Crear patrón completo
+// Crear patrÃ³n completo
 //--------------------------------------------------
 
 function buildTrackPattern(){
@@ -1421,6 +1421,21 @@ closeScores.addEventListener(
 );
 startBtn.addEventListener("click", () => {
 
+  if (!playerName) {
+    playerName = playerNameInput.value.trim();
+  }
+
+  if (!playerName) {
+    alert("Please enter your name");
+    return;
+  }
+
+  localStorage.setItem("raceToWinPlayerName", playerName);
+  playerNameInput.value = playerName;
+  playerNameInput.disabled = true;
+  hudPlayerName.textContent = playerName;
+
+
     if(music.paused){
 
         music.play().catch(()=>{});
@@ -1620,7 +1635,7 @@ if(gameRunning){
     * 0.35;
 
     //--------------------------------------------------
-    // Tráfico fijo
+    // TrÃ¡fico fijo
     //--------------------------------------------------
 
     for(
@@ -1640,7 +1655,7 @@ if(gameRunning){
         speed * 2.5;
 
         //--------------------------------------------------
-// Colisión
+// ColisiÃ³n
 //--------------------------------------------------
 
 if(
@@ -1675,7 +1690,7 @@ if(
     }
 
     //--------------------------------------------------
-    // Líneas carretera
+    // LÃ­neas carretera
     //--------------------------------------------------
 
     for(
@@ -1744,7 +1759,7 @@ String(seconds)
 .padStart(2,"0");
 
     //--------------------------------------------------
-    // Cámara
+    // CÃ¡mara
     //--------------------------------------------------
 
     camera.position.x +=
@@ -1810,6 +1825,7 @@ window.addEventListener(
 
 
 );
+
 
 
 
