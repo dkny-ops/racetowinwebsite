@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const RACE_TO_WIN_GAME_ID = "a83a0ab2-5549-4d45-95de-6b458d1142cd";
@@ -30,7 +30,31 @@ export async function POST(request: Request) {
             );
         }
 
-        const { data, error } = await supabaseAdmin.rpc(
+        const { data: registration, error: registrationError } =
+        await supabaseAdmin.rpc(
+            "register_player",
+            {
+                p_player_id: playerId,
+                p_player_name: playerName
+            }
+        );
+
+    if (registrationError) {
+        console.error("Player registration error:", registrationError);
+
+        return NextResponse.json(
+            { error: registrationError.message },
+            { status: 500 }
+        );
+    }
+
+    if (!registration?.success) {
+        return NextResponse.json(
+            { error: registration?.error || "Name already taken" },
+            { status: 409 }
+        );
+    }
+    const { data, error } = await supabaseAdmin.rpc(
             "submit_verified_score",
             {
                 p_player_id: playerId,
@@ -97,5 +121,6 @@ export async function GET() {
         );
     }
 }
+
 
 
