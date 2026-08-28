@@ -67,12 +67,12 @@ export async function POST(request: Request) {
 export async function GET() {
     try {
         const { data, error } = await supabaseAdmin
-            .from("daily_scores")
+            .from("world_players")
             .select(
-                "player_id, player_name, daily_total, score_date, game_id"
+                "player_id, player_name, total_score, days_played, game_id"
             )
             .eq("game_id", RACE_TO_WIN_GAME_ID)
-            .order("daily_total", { ascending: false });
+            .order("total_score", { ascending: false });
 
         if (error) {
             console.error("World scores error:", error);
@@ -97,4 +97,5 @@ export async function GET() {
         );
     }
 }
+
 

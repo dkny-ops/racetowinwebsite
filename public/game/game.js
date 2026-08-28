@@ -1378,7 +1378,7 @@ worldTab.addEventListener("click", async () => {
 
                 html += `
                 <p>
-                #${i + 1} - ${playerScores[i].player_name} - ${playerScores[i].daily_total}
+                #${i + 1} - ${playerScores[i].player_name} - ${playerScores[i].total_score}
                 </p>
                 `;
 
@@ -1810,6 +1810,7 @@ window.addEventListener(
 
 
 );
+
 
 
 
