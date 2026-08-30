@@ -1356,54 +1356,251 @@ worldTab.addEventListener("click", async () => {
 
     try {
 
-        const response = await fetch("/api/score");
+        let offset = 0;
+        const limit = 50;
+        let allLoadedPlayers = [];
+        let playerPosition = null;
+        let playerData = null;
+        let loading = false;
+        let hasMore = false;
 
-        const result = await response.json();
+        const myWorldPlayer =
+            document.getElementById("myWorldPlayer");
 
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || "Error loading world scores");
+        async function loadPlayers() {
+
+            if (loading) return;
+
+            loading = true;
+
+            try {
+
+                const response = await fetch(
+                    `/api/score?limit=${limit}&offset=${offset}&player_id=${playerId}`
+                );
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(
+                        result.error ||
+                        "Error loading world scores"
+                    );
+                }
+
+                const newPlayers =
+                    result.data || [];
+
+                allLoadedPlayers =
+                    allLoadedPlayers.concat(
+                        newPlayers
+                    );
+
+                playerPosition =
+                    result.player_position;
+
+                playerData =
+                    result.player_data;
+
+                hasMore =
+                    result.has_more;
+
+                renderWorldPlayers();
+
+            } catch (error) {
+
+                console.error(
+                    "Error loading world players:",
+                    error
+                );
+
+                if (
+                    allLoadedPlayers.length === 0
+                ) {
+
+                    scoresList.innerHTML =
+                        "<p style='color:#777;'>Unable to load world players</p>";
+
+                    totalScoreEl.textContent =
+                        "0 Players";
+                }
+
+            } finally {
+
+                loading = false;
+
+            }
         }
 
-        const playerScores = result.data || [];
+        function renderWorldPlayers() {
 
-        let html = "";
+            let html = "";
 
-        if (playerScores.length === 0) {
+          const loadedStart = 1;
 
-            html = "<p style='color:#777;'>No players yet</p>";
+          const loadedEnd = allLoadedPlayers.length;
 
-        } else {
+            if (
+    myWorldPlayer &&
+    playerData &&
+    playerPosition !== null &&
+    (
+        playerPosition < loadedStart ||
+        playerPosition > loadedEnd
+    )
+) {
 
-            for (let i = 0; i < playerScores.length; i++) {
+                myWorldPlayer.style.display =
+                    "block";
 
-                html += `
-                <p>
-                #${i + 1} - ${playerScores[i].player_name} - ${playerScores[i].total_score}
-                </p>
+                myWorldPlayer.innerHTML = `
+                    ?? ${playerData.player_name}
+                    &nbsp; ï¿½ &nbsp;
+                    #${playerPosition}
+                    &nbsp; ï¿½ &nbsp;
+                    ${playerData.total_score}
                 `;
+
+            } else if (myWorldPlayer) {
+
+                myWorldPlayer.style.display = "none";
 
             }
 
+            if (
+                allLoadedPlayers.length === 0
+            ) {
+
+                html =
+                    "<p style='color:#777;'>No players yet</p>";
+
+            } else {
+
+                for (
+                    let i = 0;
+                    i < allLoadedPlayers.length;
+                    i++
+                ) {
+
+                    const player =
+                        allLoadedPlayers[i];
+
+                    const realPosition =
+                        i + 1;
+
+                    const isMe =
+                        player.player_id === playerId;
+
+                    html += `
+                        <p
+                            data-player-position="${realPosition}"
+                            style="
+                                margin:8px 0;
+                                ${isMe ? "font-weight:bold;" : ""}
+                            "
+                        >
+                            #${realPosition} -
+                            ${player.player_name} -
+                            ${player.total_score}
+                        </p>
+                    `;
+                }
+
+                if (hasMore) {
+
+                    html += `
+                        <button
+                            id="showMoreWorldPlayers"
+                            style="
+                                margin:20px auto;
+                                display:block;
+                                padding:10px 22px;
+                                border-radius:10px;
+                                border:1px solid #00d4ff;
+                                background:rgba(0,212,255,0.1);
+                                color:#00d4ff;
+                                font-weight:bold;
+                                cursor:pointer;
+                            "
+                        >
+                            SHOW MORE
+                        </button>
+                    `;
+                }
+            }
+
+            scoresList.innerHTML = html;
+
+            totalScoreEl.textContent =
+                allLoadedPlayers.length +
+                " Players";
+
+            
+            scoresList.onscroll = () => {
+
+                if (myWorldPlayer && playerData && playerPosition !== null) {
+
+                    const playerElement = scoresList.querySelector(
+                        `[data-player-position="${playerPosition}"]`
+                    );
+
+                    if (playerElement) {
+
+                        const rect = playerElement.getBoundingClientRect();
+                        const listRect = scoresList.getBoundingClientRect();
+
+                        const visible =
+                            rect.top >= listRect.top &&
+                            rect.bottom <= listRect.bottom;
+
+                        myWorldPlayer.style.display =
+                            visible ? "none" : "block";
+
+                    } else {
+
+                        myWorldPlayer.style.display = "block";
+
+                    }
+                }
+            };
+
+            const showMoreBtn =
+                document.getElementById(
+                    "showMoreWorldPlayers"
+                );
+
+            if (showMoreBtn) {
+
+                showMoreBtn.addEventListener(
+                    "click",
+                    async () => {
+
+                        offset += limit;
+
+                        await loadPlayers();
+
+                    }
+                );
+            }
         }
 
-        scoresList.innerHTML = html;
-
-        totalScoreEl.textContent =
-            playerScores.length + " Players";
+        await loadPlayers();
 
     } catch (error) {
 
-        console.error("Error loading world players:", error);
+        console.error(
+            "World players error:",
+            error
+        );
 
         scoresList.innerHTML =
             "<p style='color:#777;'>Unable to load world players</p>";
 
-        totalScoreEl.textContent = "0 Players";
-
+        totalScoreEl.textContent =
+            "0 Players";
     }
 
 });
-
 weeklyTab.addEventListener("click", () => {
 
     showWeeklyScores();
@@ -1829,4 +2026,66 @@ window.addEventListener(
 
 
 
+
+
+
+
+
+
+
+
+
+//--------------------------------------------------
+// GANADORES DEL MENU PRINCIPAL
+//--------------------------------------------------
+
+async function loadMenuWinners() {
+
+    try {
+
+        const response = await fetch(
+            "/api/score?limit=3&offset=0"
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            return;
+        }
+
+        const winners = result.data || [];
+
+        const winner1 = document.getElementById("winner1");
+        const winner2 = document.getElementById("winner2");
+        const winner3 = document.getElementById("winner3");
+
+        if (winner1) {
+            winner1.textContent =
+                winners[0]
+                ? "#1 " + winners[0].player_name + " — " + winners[0].total_score
+                : "#1 ---";
+        }
+
+        if (winner2) {
+            winner2.textContent =
+                winners[1]
+                ? "#2 " + winners[1].player_name + " — " + winners[1].total_score
+                : "#2 ---";
+        }
+
+        if (winner3) {
+            winner3.textContent =
+                winners[2]
+                ? "#3 " + winners[2].player_name + " — " + winners[2].total_score
+                : "#3 ---";
+        }
+
+    } catch (error) {
+
+        console.error("Menu winners error:", error);
+
+    }
+}
+
+loadMenuWinners();
 

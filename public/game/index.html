@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="es">
 <head>
@@ -689,6 +689,35 @@ body{
 
 }
 
+/* ---------- MENU WINNERS ---------- */
+
+#winnersBox{
+    width:min(300px,80vw);
+    margin:0 auto 18px auto;
+    padding:12px 18px;
+    border:1px solid rgba(0,212,255,0.45);
+    border-radius:14px;
+    background:rgba(0,20,35,0.55);
+    box-shadow:0 0 18px rgba(0,212,255,0.15);
+    text-align:center;
+}
+
+#winnersBox .winnersTitle{
+    color:#00d4ff;
+    font-size:15px;
+    font-weight:bold;
+    letter-spacing:3px;
+    margin-bottom:8px;
+}
+
+#winnersBox div:not(.winnersTitle){
+    color:white;
+    font-size:14px;
+    margin:5px 0;
+    font-weight:bold;
+}
+
+/* ---------- END MENU WINNERS ---------- */
 </style>
 
 </head>
@@ -704,7 +733,7 @@ body{
 <div id="startScreen">
     <div id="menuPanel">
         <h1 id="gameTitle">RACE TO WIN</h1>
-        <div class="menu-tagline">DRIVE • COMPETE • WIN</div>
+        <div class="menu-tagline">DRIVE â€¢ COMPETE â€¢ WIN</div>
         <div id="titleLine"></div>
         <p style="margin-bottom:15px;">
 
@@ -725,7 +754,14 @@ font-size:18px;
 ">
 
 </p>
-        <div id="playerStats">
+        <div id="winnersBox">
+    <div class="winnersTitle">🏆 WINNERS</div>
+    <div id="winner1">#1 ---</div>
+    <div id="winner2">#2 ---</div>
+    <div id="winner3">#3 ---</div>
+</div>
+
+<div id="playerStats">
             <p>LAST SCORE <span id="lastScore">0</span></p>
             <p>TOTAL POINTS <span id="totalPoints">0</span></p>
             <p>LAST TIME <span id="lastTime">0</span></p>
@@ -770,11 +806,38 @@ font-size:18px;
 
     <button id="weeklyTab">WEEKLY</button>
 
-    <button id="worldTab">🌎 WORLD PLAYERS</button>
+    <button id="worldTab">ðŸŒŽ WORLD PLAYERS</button>
 
 </div>
 
-        <div id="scoresList" style="margin-top:20px; margin-bottom:20px; font-size:16px;"></div>
+        <div
+    id="myWorldPlayer"
+    style="
+        display:none;
+        position:sticky;
+        top:10px;
+        z-index:20;
+        margin:0 auto 15px auto;
+        width:min(90%,420px);
+        padding:12px 18px;
+        border:1px solid #00d4ff;
+        border-radius:14px;
+        background:rgba(0,20,35,0.95);
+        color:white;
+        text-align:center;
+        font-weight:bold;
+        box-shadow:0 0 20px rgba(0,212,255,0.35);
+    "
+></div>
+
+<div
+    id="scoresList"
+    style="
+        margin-top:20px;
+        margin-bottom:20px;
+        font-size:16px;
+    "
+></div>
     
         <h3>TOTAL: <span id="totalScore">0</span></h3>
         <button id="closeScores" style="margin-top:25px; width:180px; height:45px; font-size:16px; cursor:pointer; display:block; margin-left:auto; margin-right:auto;">BACK TO MENU</button>
@@ -791,4 +854,7 @@ font-size:18px;
 
 </body>
 </html>
+
+
+
 

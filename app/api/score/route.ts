@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const RACE_TO_WIN_GAME_ID = "a83a0ab2-5549-4d45-95de-6b458d1142cd";
@@ -88,15 +88,30 @@ export async function POST(request: Request) {
     }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+
+        const limit = Math.min(
+            Math.max(Number(searchParams.get("limit")) || 50, 1),
+            50
+        );
+
+        const offset = Math.max(
+            Number(searchParams.get("offset")) || 0,
+            0
+        );
+
+        const playerId = searchParams.get("player_id");
+
         const { data, error } = await supabaseAdmin
             .from("world_players")
             .select(
                 "player_id, player_name, total_score, days_played, game_id"
             )
             .eq("game_id", RACE_TO_WIN_GAME_ID)
-            .order("total_score", { ascending: false });
+            .order("total_score", { ascending: false })
+            .range(offset, offset + limit - 1);
 
         if (error) {
             console.error("World scores error:", error);
@@ -107,9 +122,42 @@ export async function GET() {
             );
         }
 
+        let playerPosition = null;
+        let playerData = null;
+
+        if (playerId) {
+            const { data: allPlayers, error: positionError } =
+                await supabaseAdmin
+                    .from("world_players")
+                    .select(
+                        "player_id, player_name, total_score, days_played, game_id"
+                    )
+                    .eq("game_id", RACE_TO_WIN_GAME_ID)
+                    .order("total_score", { ascending: false });
+
+            if (positionError) {
+                console.error(
+                    "Player position error:",
+                    positionError
+                );
+            } else {
+                const index = allPlayers.findIndex(
+                    player => player.player_id === playerId
+                );
+
+                if (index !== -1) {
+                    playerPosition = index + 1;
+                    playerData = allPlayers[index];
+                }
+            }
+        }
+
         return NextResponse.json({
             success: true,
-            data
+            data,
+            player_position: playerPosition,
+            player_data: playerData,
+            has_more: data.length === limit
         });
 
     } catch (error) {
@@ -121,6 +169,3 @@ export async function GET() {
         );
     }
 }
-
-
-
