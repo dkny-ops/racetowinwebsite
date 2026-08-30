@@ -23,15 +23,21 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!Number.isFinite(score) || score < 0 || score > 10000000) {
+        if (
+            !Number.isFinite(score) ||
+            score < 0 ||
+            score > 10000000
+        ) {
             return NextResponse.json(
                 { error: "Invalid score" },
                 { status: 400 }
             );
         }
 
-        const { data: registration, error: registrationError } =
-        await supabaseAdmin.rpc(
+        const {
+            data: registration,
+            error: registrationError
+        } = await supabaseAdmin.rpc(
             "register_player",
             {
                 p_player_id: playerId,
@@ -39,22 +45,33 @@ export async function POST(request: Request) {
             }
         );
 
-    if (registrationError) {
-        console.error("Player registration error:", registrationError);
+        if (registrationError) {
+            console.error(
+                "Player registration error:",
+                registrationError
+            );
 
-        return NextResponse.json(
-            { error: registrationError.message },
-            { status: 500 }
-        );
-    }
+            return NextResponse.json(
+                { error: registrationError.message },
+                { status: 500 }
+            );
+        }
 
-    if (!registration?.success) {
-        return NextResponse.json(
-            { error: registration?.error || "Name already taken" },
-            { status: 409 }
-        );
-    }
-    const { data, error } = await supabaseAdmin.rpc(
+        if (!registration?.success) {
+            return NextResponse.json(
+                {
+                    error:
+                        registration?.error ||
+                        "Name already taken"
+                },
+                { status: 409 }
+            );
+        }
+
+        const {
+            data,
+            error
+        } = await supabaseAdmin.rpc(
             "submit_verified_score",
             {
                 p_player_id: playerId,
@@ -65,7 +82,10 @@ export async function POST(request: Request) {
         );
 
         if (error) {
-            console.error("Verified score error:", error);
+            console.error(
+                "Verified score error:",
+                error
+            );
 
             return NextResponse.json(
                 { error: error.message },
@@ -79,7 +99,10 @@ export async function POST(request: Request) {
         });
 
     } catch (error) {
-        console.error("Score API error:", error);
+        console.error(
+            "Score API error:",
+            error
+        );
 
         return NextResponse.json(
             { error: "Server error" },
@@ -90,10 +113,14 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     try {
-        const { searchParams } = new URL(request.url);
+        const { searchParams } =
+            new URL(request.url);
 
         const limit = Math.min(
-            Math.max(Number(searchParams.get("limit")) || 50, 1),
+            Math.max(
+                Number(searchParams.get("limit")) || 50,
+                1
+            ),
             50
         );
 
@@ -102,19 +129,35 @@ export async function GET(request: Request) {
             0
         );
 
-        const playerId = searchParams.get("player_id");
+        const playerId =
+            searchParams.get("player_id");
 
-        const { data, error } = await supabaseAdmin
-            .from("world_players")
-            .select(
-                "player_id, player_name, total_score, days_played, game_id"
-            )
-            .eq("game_id", RACE_TO_WIN_GAME_ID)
-            .order("total_score", { ascending: false })
-            .range(offset, offset + limit - 1);
+        // Pedimos 1 jugador extra para saber
+        // con certeza si existe otra página.
+        const { data, error } =
+            await supabaseAdmin
+                .from("world_players")
+                .select(
+                    "player_id, player_name, total_score, days_played, game_id"
+                )
+                .eq(
+                    "game_id",
+                    RACE_TO_WIN_GAME_ID
+                )
+                .order(
+                    "total_score",
+                    { ascending: false }
+                )
+                .range(
+                    offset,
+                    offset + limit
+                );
 
         if (error) {
-            console.error("World scores error:", error);
+            console.error(
+                "World scores error:",
+                error
+            );
 
             return NextResponse.json(
                 { error: error.message },
@@ -122,18 +165,32 @@ export async function GET(request: Request) {
             );
         }
 
+        const hasMore =
+            data.length > limit;
+
+        const pageData =
+            data.slice(0, limit);
+
         let playerPosition = null;
         let playerData = null;
 
         if (playerId) {
-            const { data: allPlayers, error: positionError } =
-                await supabaseAdmin
-                    .from("world_players")
-                    .select(
-                        "player_id, player_name, total_score, days_played, game_id"
-                    )
-                    .eq("game_id", RACE_TO_WIN_GAME_ID)
-                    .order("total_score", { ascending: false });
+            const {
+                data: allPlayers,
+                error: positionError
+            } = await supabaseAdmin
+                .from("world_players")
+                .select(
+                    "player_id, player_name, total_score, days_played, game_id"
+                )
+                .eq(
+                    "game_id",
+                    RACE_TO_WIN_GAME_ID
+                )
+                .order(
+                    "total_score",
+                    { ascending: false }
+                );
 
             if (positionError) {
                 console.error(
@@ -141,27 +198,39 @@ export async function GET(request: Request) {
                     positionError
                 );
             } else {
-                const index = allPlayers.findIndex(
-                    player => player.player_id === playerId
-                );
+                const index =
+                    allPlayers.findIndex(
+                        player =>
+                            player.player_id ===
+                            playerId
+                    );
 
                 if (index !== -1) {
-                    playerPosition = index + 1;
-                    playerData = allPlayers[index];
+                    playerPosition =
+                        index + 1;
+
+                    playerData =
+                        allPlayers[index];
                 }
             }
         }
 
         return NextResponse.json({
             success: true,
-            data,
-            player_position: playerPosition,
-            player_data: playerData,
-            has_more: data.length === limit
+            data: pageData,
+            player_position:
+                playerPosition,
+            player_data:
+                playerData,
+            has_more:
+                hasMore
         });
 
     } catch (error) {
-        console.error("World scores API error:", error);
+        console.error(
+            "World scores API error:",
+            error
+        );
 
         return NextResponse.json(
             { error: "Server error" },

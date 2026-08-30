@@ -37,7 +37,10 @@ const extraLifeBtn = document.getElementById("extraLifeBtn");
 const playAgainBtn = document.getElementById("playAgainBtn");
 
 let extraLifeUsed = false;
+let currentSessionId = null;
 let scoreSaved = false;
+let lastCheckpointSent = 0;
+let checkpointSending = false;
 let invulnerableUntil = 0;
 let gameOverTimer;
 let scoreSaveTimer;
@@ -990,32 +993,81 @@ if(gameOver) return;
 gameOver = true;
 gameRunning = false;
 
-scoreSaveTimer = setTimeout(() => {
+scoreSaveTimer = setTimeout(async () => {
 
-    if (scoreSaved) return;
+    if(scoreSaved) return;
 
     scoreSaved = true;
 
-    fetch("/api/score", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-        player_id: playerId,
-        score: Math.floor(score),
-        player_name: playerName || "PLAYER"
-    })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            console.error("Error guardando score:", data.error);
+    if(!currentSessionId){
+
+        console.error(
+            "No active game session"
+        );
+
+        return;
+    }
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/game-session/finish",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+
+                        session_id:
+                            currentSessionId,
+
+                        final_score:
+                            Math.floor(score),
+
+                        elapsed_seconds:
+                            elapsedTime,
+
+                        distance:
+                            distance
+
+                    })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if(
+            !response.ok ||
+            !result.success
+        ){
+
+            console.error(
+                "Game session rejected:",
+                result
+            );
+
+            return;
         }
-    })
-    .catch(error => {
-        console.error("Error conectando con Supabase:", error);
-    });
+
+        console.log(
+            "Game session finished:",
+            result
+        );
+
+        currentSessionId = null;
+
+    }catch(error){
+
+        console.error(
+            "Finish game session error:",
+            error
+        );
+
+    }
 
 }, 3000);
 
@@ -1165,10 +1217,169 @@ gameOverTimer = setTimeout(() => {
 // Iniciar juego
 //--------------------------------------------------
 
-function startGame(){
+async function startGameSession(){
+
+    try {
+
+        const response = await fetch(
+            "/api/game-session",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    player_id: playerId
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        if(
+            !response.ok ||
+            !result.success ||
+            !result.session_id
+        ){
+
+            console.error(
+                "Game session error:",
+                result
+            );
+
+            alert(
+                "Unable to start game. Please try again."
+            );
+
+            return null;
+        }
+
+        console.log(
+            "Game session started:",
+            result.session_id
+        );
+
+        return result.session_id;
+
+    } catch(error){
+
+        console.error(
+            "Game session request error:",
+            error
+        );
+
+        alert(
+            "Unable to connect to the game server."
+        );
+
+        return null;
+    }
+}
+
+async function saveGameCheckpoint(){
+
+    if(!currentSessionId) return;
+
+    if(checkpointSending) return;
+
+    const checkpointScore =
+        Math.floor(score / 2000) * 2000;
+
+    if(checkpointScore <= lastCheckpointSent){
+        return;
+    }
+
+    checkpointSending = true;
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/game-checkpoint",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+
+                        session_id:
+                            currentSessionId,
+
+                        checkpoint_score:
+                            checkpointScore,
+
+                        elapsed_seconds:
+                            elapsedTime,
+
+                        distance:
+                            distance,
+
+                        speed:
+                            speed
+
+                    })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if(
+            !response.ok ||
+            !result.success
+        ){
+
+            console.error(
+                "Checkpoint rejected:",
+                result
+            );
+
+            return;
+        }
+
+        lastCheckpointSent =
+            checkpointScore;
+
+        console.log(
+            "Checkpoint verified:",
+            checkpointScore
+        );
+
+    }catch(error){
+
+        console.error(
+            "Checkpoint request error:",
+            error
+        );
+
+    }finally{
+
+        checkpointSending = false;
+
+    }
+
+}
+
+
+
+    async function startGame(){
+
+    const sessionId =
+        await startGameSession();
+
+    if(!sessionId){
+
+        return;
+    }
+
+    currentSessionId = sessionId;
 
     extraLifeUsed = false;
     scoreSaved = false;
+    lastCheckpointSent = 0;
+    checkpointSending = false;
 
    totalPoints = calculateWeeklyTotal();
 totalPointsEl.textContent = totalPoints;
@@ -1432,47 +1643,30 @@ worldTab.addEventListener("click", async () => {
             }
         }
 
+        
         function renderWorldPlayers() {
-
             let html = "";
 
-          const loadedStart = 1;
-
-          const loadedEnd = allLoadedPlayers.length;
-
             if (
-    myWorldPlayer &&
-    playerData &&
-    playerPosition !== null &&
-    (
-        playerPosition < loadedStart ||
-        playerPosition > loadedEnd
-    )
-) {
-
-                myWorldPlayer.style.display =
-                    "block";
-
-                myWorldPlayer.innerHTML = `
-                    ?? ${playerData.player_name}
-                    &nbsp; ï¿½ &nbsp;
-                    #${playerPosition}
-                    &nbsp; ï¿½ &nbsp;
-                    ${playerData.total_score}
-                `;
-
-            } else if (myWorldPlayer) {
-
-                myWorldPlayer.style.display = "none";
-
-            }
-
-            if (
-                allLoadedPlayers.length === 0
+                myWorldPlayer &&
+                playerData &&
+                playerPosition !== null
             ) {
 
-                html =
-                    "<p style='color:#777;'>No players yet</p>";
+                myWorldPlayer.style.display = "block";
+
+                myWorldPlayer.innerHTML = `
+                    🏁 ${playerData.player_name}
+                    &nbsp; • &nbsp;
+                    #${playerPosition}
+                    &nbsp; • &nbsp;
+                    ${playerData.total_score}
+                `;
+            }
+
+            if (allLoadedPlayers.length === 0) {
+
+                html = '<p style="color:#777;">No players yet</p>';
 
             } else {
 
@@ -1482,14 +1676,9 @@ worldTab.addEventListener("click", async () => {
                     i++
                 ) {
 
-                    const player =
-                        allLoadedPlayers[i];
-
-                    const realPosition =
-                        i + 1;
-
-                    const isMe =
-                        player.player_id === playerId;
+                    const player = allLoadedPlayers[i];
+                    const realPosition = i + 1;
+                    const isMe = player.player_id === playerId;
 
                     html += `
                         <p
@@ -1535,58 +1724,30 @@ worldTab.addEventListener("click", async () => {
                 allLoadedPlayers.length +
                 " Players";
 
-            
-            scoresList.onscroll = () => {
-
-                if (myWorldPlayer && playerData && playerPosition !== null) {
-
-                    const playerElement = scoresList.querySelector(
-                        `[data-player-position="${playerPosition}"]`
-                    );
-
-                    if (playerElement) {
-
-                        const rect = playerElement.getBoundingClientRect();
-                        const listRect = scoresList.getBoundingClientRect();
-
-                        const visible =
-                            rect.top >= listRect.top &&
-                            rect.bottom <= listRect.bottom;
-
-                        myWorldPlayer.style.display =
-                            visible ? "none" : "block";
-
-                    } else {
-
-                        myWorldPlayer.style.display = "block";
-
-                    }
-                }
-            };
+            if (myWorldPlayer && playerData && playerPosition !== null) {
+                myWorldPlayer.style.display = "block";
+            }
 
             const showMoreBtn =
-                document.getElementById(
-                    "showMoreWorldPlayers"
-                );
+                document.getElementById("showMoreWorldPlayers");
 
             if (showMoreBtn) {
 
-                showMoreBtn.addEventListener(
-                    "click",
-                    async () => {
+                showMoreBtn.addEventListener("click", async () => {
 
-                        offset += limit;
+                    offset += limit;
 
-                        await loadPlayers();
+                    await loadPlayers();
 
-                    }
-                );
+                });
             }
         }
-
         await loadPlayers();
 
-    } catch (error) {
+    } 
+    
+    
+    catch (error) {
 
         console.error(
             "World players error:",
@@ -1922,7 +2083,24 @@ if(
 
     score += 0.15;
 
-    distance += speed;
+     distance += speed;
+
+//--------------------------------------------------
+// CHECKPOINTS DEL SERVIDOR
+//--------------------------------------------------
+
+const reachedCheckpoint =
+    Math.floor(score / 2000) * 2000;
+
+if(
+    reachedCheckpoint > lastCheckpointSent &&
+    reachedCheckpoint > 0 &&
+    !checkpointSending
+){
+
+    saveGameCheckpoint();
+
+}
 
     scoreEl.textContent =
 
@@ -2088,4 +2266,7 @@ async function loadMenuWinners() {
 }
 
 loadMenuWinners();
+
+
+
 
