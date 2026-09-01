@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function SignInPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -56,7 +59,7 @@ export default function SignInPage() {
       return;
     }
 
-    window.location.href = "/";
+    router.push("/");
   }
 
   return (
@@ -64,8 +67,7 @@ export default function SignInPage() {
       
 <div className="w-full max-w-sm rounded-3xl border border-orange-400/30 bg-zinc-950/90 p-6 text-center shadow-[0_0_40px_rgba(255,165,0,0.15)]">
 
-        <h1 className="text-2cls
-        xl font-black tracking-[0.12em]">
+        <h1 className="text-2xl font-black tracking-[0.12em]">
           RACE<span className="text-cyan-400">TO</span>WIN
         </h1>
 
@@ -123,12 +125,12 @@ export default function SignInPage() {
           </p>
         )}
 
-        <a
+        <Link
           href="/"
           className="mt-6 inline-block text-sm font-bold text-gray-500 transition hover:text-white"
         >
           ← Back to Race To Win
-        </a>
+        </Link>
 
       </div>
     </main>

@@ -1,15 +1,17 @@
+import Link from "next/link";
+
 export default function PrivacyPolicy() {
   return (
     <main className="min-h-screen bg-black px-6 py-20 text-white">
 
       <div className="mx-auto max-w-3xl">
 
-        <a
+        <Link
           href="/"
           className="text-sm font-bold text-cyan-400 hover:text-cyan-300"
         >
           ← BACK TO HOME
-        </a>
+        </Link>
 
         <h1 className="mt-10 text-4xl font-black">
           Privacy Policy
@@ -72,7 +74,7 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="mb-3 text-2xl font-bold text-white">
-              Children's Privacy
+              Child Privacy
             </h2>
 
             <p>

@@ -1,12 +1,40 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-import { supabase } from "@/lib/supabase";
+type PreviousWinner = {
+  position: number;
+  player_name: string;
+  weekly_total: number;
+};
 
 export default function Home() {
+  const [winners, setWinners] = useState<PreviousWinner[]>([]);
+  const [loadingWinners, setLoadingWinners] = useState(true);
 
+  useEffect(() => {
+    async function loadWinners() {
+      try {
+        const response = await fetch("/api/previous-winners");
+        const result = await response.json();
 
+        if (!response.ok || !result.success) {
+          setWinners([]);
+          return;
+        }
 
+        setWinners(result.data || []);
+      } catch (error) {
+        console.error("Previous winners error:", error);
+        setWinners([]);
+      } finally {
+        setLoadingWinners(false);
+      }
+    }
+
+    loadWinners();
+  }, []);
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -18,21 +46,21 @@ export default function Home() {
 
         <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
 
-          <a
+          <Link
             href="/"
             className="text-xl font-black tracking-[0.15em]"
           >
             RACE<span className="text-cyan-400">TO</span>WIN
-          </a>
+          </Link>
 
           <div className="hidden items-center gap-8 text-sm font-bold md:flex">
 
-            <a
+            <Link
               href="/"
               className="text-white transition hover:text-cyan-400"
             >
               HOME
-            </a>
+            </Link>
 
             <a
               href="/play"
@@ -50,12 +78,12 @@ export default function Home() {
 
           </div>
 
-          <a
-  href="#signin"
-  className="rounded-xl border border-orange-400/60 bg-orange-400/10 px-5 py-2.5 text-sm font-black tracking-wider text-orange-300 shadow-[0_0_20px_rgba(255,165,0,0.35)] transition hover:scale-105 hover:border-orange-300 hover:bg-orange-400/20 hover:text-white hover:shadow-[0_0_30px_rgba(255,165,0,0.6)]"
->
-  SIGN IN
-</a>
+          <Link
+            href="/signin"
+            className="rounded-xl border border-orange-400/60 bg-orange-400/10 px-5 py-2.5 text-sm font-black tracking-wider text-orange-300 shadow-[0_0_20px_rgba(255,165,0,0.35)] transition hover:scale-105 hover:border-orange-300 hover:bg-orange-400/20 hover:text-white hover:shadow-[0_0_30px_rgba(255,165,0,0.6)]"
+          >
+            SIGN IN
+          </Link>
 
         </div>
 
@@ -83,12 +111,12 @@ export default function Home() {
             How far can you go?
           </p>
 
-          <a
+          <Link
             href="/play"
             className="mt-10 inline-block rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 px-12 py-4 text-xl font-black tracking-wider shadow-[0_0_35px_rgba(0,212,255,0.45)] transition hover:scale-105 hover:shadow-[0_0_55px_rgba(0,212,255,0.7)]"
           >
             PLAY NOW
-          </a>
+          </Link>
 
           <p className="mt-7 text-sm text-gray-600">
             Free to play • No download required
@@ -132,7 +160,17 @@ export default function Home() {
   id="shareLeaderboard"
   className="mt-4 space-y-2 text-sm font-bold text-white"
 >
-  <p>Loading leaderboard...</p>
+  {loadingWinners ? (
+    <p>Loading leaderboard...</p>
+  ) : winners.length > 0 ? (
+    winners.map((winner) => (
+      <p key={winner.position} className="text-cyan-300">
+        #{winner.position} {winner.player_name} — {winner.weekly_total}
+      </p>
+    ))
+  ) : (
+    <p className="text-gray-400">No weekly winners yet.</p>
+  )}
 </div>
 
   <p className="mt-4 text-xs font-bold text-gray-500">

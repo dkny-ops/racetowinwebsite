@@ -1,4 +1,6 @@
-﻿export default function PlayPage() {
+﻿import Link from "next/link";
+
+export default function PlayPage() {
   return (
     <main
       style={{
@@ -11,7 +13,7 @@
         background: "black",
       }}
     >
-      <a
+      <Link
         href="/"
         style={{
           position: "absolute",
@@ -30,7 +32,7 @@
         }}
       >
         HOME
-      </a>
+      </Link>
 
       <iframe
         src="/game/index.html"
