@@ -472,8 +472,52 @@ body{
 }
 
 #playerName{
-    width:min(220px, 80vw) !important;
-    font-size:clamp(15px, 4vw, 18px) !important;
+    width:min(280px, 82vw) !important;
+    height:58px !important;
+
+    padding:0 20px !important;
+
+    font-size:clamp(18px, 4.5vw, 23px) !important;
+    font-weight:800 !important;
+
+    text-align:center;
+
+    color:#ffffff !important;
+
+    background:rgba(25, 12, 5, 0.94) !important;
+
+    border:2px solid #ff8a00 !important;
+    border-radius:14px !important;
+
+    outline:none !important;
+
+    box-shadow:
+        0 0 8px rgba(255,138,0,0.9),
+        0 0 22px rgba(255,138,0,0.65),
+        0 0 45px rgba(255,138,0,0.3),
+        inset 0 0 15px rgba(255,138,0,0.15);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+#playerName::placeholder{
+    color:rgba(255,255,255,0.75) !important;
+    font-weight:600;
+}
+
+#playerName:focus{
+    border-color:#ffb347 !important;
+
+    box-shadow:
+        0 0 10px rgba(255,138,0,1),
+        0 0 30px rgba(255,138,0,0.9),
+        0 0 60px rgba(255,138,0,0.45),
+        inset 0 0 18px rgba(255,138,0,0.18);
+
+    transform:scale(1.03);
 }
 
 #startBtn,

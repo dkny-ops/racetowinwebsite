@@ -1083,85 +1083,11 @@ gameOverScoreEl.textContent =
 "Score: " + Math.floor(score);
 
 
-const todayKey =
-new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
 
-if(!weeklyScores[todayKey]){
-    weeklyScores[todayKey] = [];
-}
-
-weeklyScores[todayKey].push(Math.floor(score));
-
-weeklyScores[todayKey].sort((a,b)=>b-a);
-
-weeklyScores[todayKey] =
-weeklyScores[todayKey].slice(0,7);
-
-let playerScores =
-JSON.parse(localStorage.getItem("raceToWinPlayers")) || [];
-
-
-let currentScore = Math.floor(score);
-
-
-let existingPlayer =
-playerScores.find(
-    p => p.playerId === playerId
-);
 
 gameOverHighScoreEl.textContent =
-"High Score: " +
-(
-    existingPlayer
-    ? Math.max(existingPlayer.score, currentScore)
-    : currentScore
-);
-
-
-if(existingPlayer){
-
-    existingPlayer.name = playerName || "PLAYER";
-
-    if(currentScore > existingPlayer.score){
-
-        existingPlayer.score = currentScore;
-
-    }
-
-}else{
-
-    playerScores.push({
-
-        playerId: playerId,
-
-        name: playerName || "PLAYER",
-
-        score: currentScore
-
-    });
-
-}
-
-
-playerScores.sort(
-    (a,b)=>b.score-a.score
-);
-
-
-playerScores =
-playerScores.slice(0,100);
-
-
-localStorage.setItem(
-    "raceToWinPlayers",
-    JSON.stringify(playerScores)
-);
-
-localStorage.setItem(
-"raceToWinWeekly",
-JSON.stringify(weeklyScores)
-);
-
+    "Score: " + Math.floor(score);
+    
 
 totalPoints = calculateWeeklyTotal();
 totalPointsEl.textContent = totalPoints;
@@ -1217,6 +1143,58 @@ gameOverTimer = setTimeout(() => {
 // Iniciar juego
 //--------------------------------------------------
 
+async function registerPlayer(){
+
+    try{
+
+        const response =
+            await fetch(
+                "/api/score",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        player_id: playerId,
+                        player_name: playerName,
+                        score: 0
+                    })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        console.log(
+            "Player registration result:",
+            result
+        );
+
+        if(
+            !response.ok &&
+            response.status !== 409
+        ){
+            console.error(
+                "Player registration error:",
+                result
+            );
+
+            return false;
+        }
+
+        return true;
+
+    }catch(error){
+
+        console.error(
+            "Player registration request error:",
+            error
+        );
+
+        return false;
+    }
+}
 async function startGameSession(){
 
     try {
@@ -1777,34 +1755,86 @@ closeScores.addEventListener(
 
 }
 );
-startBtn.addEventListener("click", () => {
 
-  if (!playerName) {
-    playerName = playerNameInput.value.trim();
-  }
+startBtn.addEventListener("click", async () => {
 
-  if (!playerName) {
-    alert("Please enter your name");
-    return;
-  }
+    if (!playerName) {
+        playerName = playerNameInput.value.trim();
+    }
 
-  localStorage.setItem("raceToWinPlayerName", playerName);
-  playerNameInput.value = playerName;
-  playerNameInput.disabled = true;
-  hudPlayerName.textContent = playerName;
+    if (!playerName) {
+        alert("Please enter your name");
+        return;
+    }
 
+    localStorage.setItem(
+        "raceToWinPlayerName",
+        playerName
+    );
 
-    if(music.paused){
+    playerNameInput.value = playerName;
+    playerNameInput.disabled = true;
+    hudPlayerName.textContent = playerName;
 
-        music.play().catch(()=>{});
+    try {
 
+        const response = await fetch(
+            "/api/register-player",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    player_id: playerId,
+                    player_name: playerName
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        console.log(
+            "Player registration:",
+            result
+        );
+
+        if (
+            !response.ok ||
+            !result.success
+        ) {
+            alert(
+                result.error ||
+                "Unable to register player"
+            );
+
+            return;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Player registration error:",
+            error
+        );
+
+        alert(
+            "Unable to connect to the game server."
+        );
+
+        return;
+    }
+
+    if (music.paused) {
+        music.play().catch(() => {});
     }
 
     console.log("BOTON FUNCIONA");
 
     startGame();
 
-});
+ });
+
 
 
 playAgainBtn.addEventListener("click", () => {
@@ -1820,15 +1850,17 @@ playAgainBtn.addEventListener("click", () => {
 });
 
 extraLifeBtn.addEventListener("click", () => {
-
-    if(extraLifeUsed) return;
+ if(extraLifeUsed) return;
 
     clearTimeout(gameOverTimer);
     clearTimeout(scoreSaveTimer);
 
     extraLifeUsed = true;
+    cameraShake = false;
+    scoreSaved = false;
 
     gameOverEl.style.display = "none";
+   
 
     invulnerableUntil = Date.now() + 5000;
 

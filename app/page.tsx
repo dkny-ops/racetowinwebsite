@@ -51,11 +51,11 @@ export default function Home() {
           </div>
 
           <a
-            href="/play"
-            className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-2.5 text-sm font-black shadow-[0_0_20px_rgba(0,212,255,0.3)] transition hover:scale-105"
-          >
-            PLAY NOW
-          </a>
+  href="#signin"
+  className="rounded-xl border border-orange-400/60 bg-orange-400/10 px-5 py-2.5 text-sm font-black tracking-wider text-orange-300 shadow-[0_0_20px_rgba(255,165,0,0.35)] transition hover:scale-105 hover:border-orange-300 hover:bg-orange-400/20 hover:text-white hover:shadow-[0_0_30px_rgba(255,165,0,0.6)]"
+>
+  SIGN IN
+</a>
 
         </div>
 
@@ -93,6 +93,52 @@ export default function Home() {
           <p className="mt-7 text-sm text-gray-600">
             Free to play • No download required
           </p>
+
+          <a
+  href="#share"
+  className="mt-6 inline-flex items-center gap-3 rounded-2xl border border-cyan-400/40 bg-zinc-900/70 px-8 py-3.5 text-sm font-black tracking-[0.2em] text-white shadow-[0_0_25px_rgba(0,212,255,0.18)] backdrop-blur-md transition hover:scale-105 hover:border-cyan-400 hover:text-cyan-300 hover:shadow-[0_0_40px_rgba(0,212,255,0.4)]"
+>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="shrink-0"
+  >
+    <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2" />
+    <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+    <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2" />
+    <path
+      d="M8.6 10.7L15.4 6.3M8.6 13.3L15.4 17.7"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+
+  SHARE TO WIN 
+</a>
+
+<div
+  id="share"
+  className="mx-auto mt-8 w-full max-w-sm rounded-3xl border border-cyan-400/20 bg-zinc-950/70 p-5 text-center shadow-[0_0_35px_rgba(0,212,255,0.12)] backdrop-blur-md"
+>
+  <p className="text-xs font-black tracking-[0.3em] text-cyan-400">
+    SHARE LEADERBOARD
+  </p>
+
+  <div
+  id="shareLeaderboard"
+  className="mt-4 space-y-2 text-sm font-bold text-white"
+>
+  <p>Loading leaderboard...</p>
+</div>
+
+  <p className="mt-4 text-xs font-bold text-gray-500">
+    🏆 $10 WEEKLY PRIZE
+  </p>
+</div>
 
         </div>
 
