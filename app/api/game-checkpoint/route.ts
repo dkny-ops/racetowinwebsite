@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   checkServerRateLimit,
   getRequestIp,
@@ -60,6 +60,18 @@ export async function POST(request: Request) {
           error: "Invalid checkpoint",
         },
         { status: 400 },
+      );
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Supabase is not configured in this environment.",
+        },
+        { status: 503 },
       );
     }
 

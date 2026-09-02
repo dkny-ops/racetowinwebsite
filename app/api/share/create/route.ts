@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
 
     try {
+        const supabaseAdmin = getSupabaseAdmin();
+
+        if (!supabaseAdmin) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Supabase is not configured in this environment."
+                },
+                { status: 503 }
+            );
+        }
 
         const body = await request.json();
 
@@ -32,7 +38,7 @@ export async function POST(request: Request) {
             data: player,
             error: playerError
         } = await supabaseAdmin
-            .from("players")
+            .from<{ player_id: string; player_name: string }>("players")
             .select("player_id, player_name")
             .eq("player_id", playerId)
             .maybeSingle();

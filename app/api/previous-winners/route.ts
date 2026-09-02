@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 const RACE_TO_WIN_GAME_ID =
     "a83a0ab2-5549-4d45-95de-6b458d1142cd";
 
 export async function GET() {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
+
+        if (!supabaseAdmin) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Supabase is not configured in this environment."
+                },
+                { status: 503 }
+            );
+        }
+
         const { data, error } = await supabaseAdmin
             .from("previous_winners")
             .select(

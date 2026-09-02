@@ -69,10 +69,17 @@ const playerNameInput = document.getElementById("playerName");
 
 let playerName = localStorage.getItem("raceToWinPlayerName") || "";
 
-let playerId = localStorage.getItem("raceToWinPlayerId");
+const authUserId = localStorage.getItem("raceToWinAuthUserId");
+
+if (!authUserId) {
+    alert("Please sign in and verify your email before playing.");
+    window.location.href = "/signin";
+}
+
+let playerId = authUserId || localStorage.getItem("raceToWinPlayerId") || "";
 
 if (!playerId) {
-    playerId = crypto.randomUUID();
+    playerId = authUserId || crypto.randomUUID();
     localStorage.setItem("raceToWinPlayerId", playerId);
 }
 
@@ -999,6 +1006,8 @@ scoreSaveTimer = setTimeout(async () => {
 
     scoreSaved = true;
 
+    const finalScore = Math.floor(score);
+
     if(!currentSessionId){
 
         console.error(
@@ -1025,7 +1034,7 @@ scoreSaveTimer = setTimeout(async () => {
                             currentSessionId,
 
                         final_score:
-                            Math.floor(score),
+                            finalScore,
 
                         elapsed_seconds:
                             elapsedTime,
@@ -1056,6 +1065,39 @@ scoreSaveTimer = setTimeout(async () => {
         console.log(
             "Game session finished:",
             result
+        );
+
+        const worldScoreResponse = await fetch(
+            "/api/score",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    player_id: playerId,
+                    player_name: playerName || "PLAYER",
+                    score: finalScore
+                })
+            }
+        );
+
+        const worldScoreResult = await worldScoreResponse.json();
+
+        if(
+            !worldScoreResponse.ok ||
+            !worldScoreResult.success
+        ){
+            console.error(
+                "World score update rejected:",
+                worldScoreResult
+            );
+            return;
+        }
+
+        console.log(
+            "World score submitted:",
+            worldScoreResult
         );
 
         currentSessionId = null;

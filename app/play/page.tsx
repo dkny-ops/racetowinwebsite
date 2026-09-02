@@ -1,6 +1,46 @@
-﻿import Link from "next/link";
+﻿"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function PlayPage() {
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    async function ensureAuthorized() {
+      try {
+        const { data } = await supabase.auth.getSession();
+
+        if (!data.session) {
+          router.replace("/signin");
+          return;
+        }
+
+        localStorage.setItem("raceToWinAuthUserId", data.session.user.id);
+        localStorage.setItem("raceToWinAuthEmail", data.session.user.email || "");
+        setReady(true);
+      } catch {
+        router.replace("/signin");
+      }
+    }
+
+    ensureAuthorized();
+  }, [router]);
+
+  if (!ready) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <p className="text-sm font-bold tracking-[0.4em] text-cyan-400">VERIFYING ACCESS</p>
+          <p className="mt-4 text-gray-400">Please sign in to continue.</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main
       style={{

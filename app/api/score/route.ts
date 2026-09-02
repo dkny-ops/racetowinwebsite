@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 const RACE_TO_WIN_GAME_ID = "a83a0ab2-5549-4d45-95de-6b458d1142cd";
-
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST(request: Request) {
     try {
@@ -31,6 +26,15 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 { error: "Invalid score" },
                 { status: 400 }
+            );
+        }
+
+        const supabaseAdmin = getSupabaseAdmin();
+
+        if (!supabaseAdmin) {
+            return NextResponse.json(
+                { error: "Supabase is not configured in this environment." },
+                { status: 503 }
             );
         }
 
@@ -113,6 +117,15 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
+
+        if (!supabaseAdmin) {
+            return NextResponse.json(
+                { error: "Supabase is not configured in this environment." },
+                { status: 503 }
+            );
+        }
+
         const { searchParams } =
             new URL(request.url);
 
@@ -136,7 +149,7 @@ export async function GET(request: Request) {
         // con certeza si existe otra página.
         const { data, error } =
             await supabaseAdmin
-                .from("world_players")
+                .from<{ player_id: string; player_name: string; total_score: number; days_played: number; game_id: string }>("world_players")
                 .select(
                     "player_id, player_name, total_score, days_played, game_id"
                 )
@@ -165,11 +178,9 @@ export async function GET(request: Request) {
             );
         }
 
-        const hasMore =
-            data.length > limit;
-
-        const pageData =
-            data.slice(0, limit);
+        const safeData = data ?? [];
+        const hasMore = safeData.length > limit;
+        const pageData = safeData.slice(0, limit);
 
         let playerPosition = null;
         let playerData = null;
@@ -179,7 +190,7 @@ export async function GET(request: Request) {
                 data: allPlayers,
                 error: positionError
             } = await supabaseAdmin
-                .from("world_players")
+                .from<{ player_id: string; player_name: string; total_score: number; days_played: number; game_id: string }>("world_players")
                 .select(
                     "player_id, player_name, total_score, days_played, game_id"
                 )
@@ -198,9 +209,10 @@ export async function GET(request: Request) {
                     positionError
                 );
             } else {
+                const safeAllPlayers = allPlayers ?? [];
                 const index =
-                    allPlayers.findIndex(
-                        player =>
+                    safeAllPlayers.findIndex(
+                        (player: { player_id: string; player_name: string; total_score: number; days_played: number; game_id: string }) =>
                             player.player_id ===
                             playerId
                     );
@@ -210,7 +222,7 @@ export async function GET(request: Request) {
                         index + 1;
 
                     playerData =
-                        allPlayers[index];
+                        safeAllPlayers[index];
                 }
             }
         }

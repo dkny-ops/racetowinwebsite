@@ -19,6 +19,11 @@ export default function SignInPage() {
       return;
     }
 
+    if (!supabase || !supabase.auth || !supabase.auth.signInWithOtp) {
+      setMessage("Supabase is not configured in this local environment.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
@@ -43,10 +48,15 @@ export default function SignInPage() {
       return;
     }
 
+    if (!supabase || !supabase.auth || !supabase.auth.verifyOtp) {
+      setMessage("Supabase is not configured in this local environment.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       email: email.trim(),
       token: code.trim(),
       type: "email",
@@ -59,7 +69,24 @@ export default function SignInPage() {
       return;
     }
 
-    router.push("/");
+    const sessionResult = await supabase.auth.getSession();
+    const sessionUserId = sessionResult?.data?.session?.user?.id || data?.user?.id || null;
+    const userResult = await supabase.auth.getUser();
+    const verifiedUserId = userResult?.data?.user?.id || sessionUserId || email.trim();
+    const authEmail = email.trim();
+
+    if (!verifiedUserId) {
+      setMessage("Verification succeeded but we could not read the authenticated user. Please try again.");
+      return;
+    }
+
+    localStorage.setItem("raceToWinAuthUserId", verifiedUserId);
+    localStorage.setItem("raceToWinAuthEmail", authEmail);
+    localStorage.removeItem("raceToWinPlayerId");
+    localStorage.removeItem("raceToWinPlayerName");
+
+    setMessage("Verified! Redirecting to the game...");
+    router.replace("/play");
   }
 
   return (
