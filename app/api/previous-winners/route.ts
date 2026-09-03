@@ -42,9 +42,14 @@ export async function GET() {
             );
         }
 
+        // Cachear la respuesta por 60 segundos usando headers HTTP
         return NextResponse.json({
             success: true,
             data: data || []
+        }, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+            }
         });
 
     } catch (error) {
