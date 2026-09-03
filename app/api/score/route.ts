@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { checkServerRateLimit, getRequestIp } from "@/lib/server-validation";
 
 const RACE_TO_WIN_GAME_ID = "a83a0ab2-5549-4d45-95de-6b458d1142cd";
 
@@ -117,6 +118,17 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     try {
+        // Rate limiting para prevenir saturación
+        const clientIp = getRequestIp(request);
+        const rateLimit = checkServerRateLimit(`score-get:${clientIp}`, 30, 60_000);
+
+        if (!rateLimit.ok) {
+            return NextResponse.json(
+                { error: `Too many requests. Retry in ${rateLimit.retryAfter}s.` },
+                { status: 429 }
+            );
+        }
+
         const supabaseAdmin = getSupabaseAdmin();
 
         if (!supabaseAdmin) {
@@ -185,45 +197,44 @@ export async function GET(request: Request) {
         let playerPosition = null;
         let playerData = null;
 
+        // OPTIMIZACIÓN: Usar función SQL en Supabase en lugar de cargar todos los jugadores
         if (playerId) {
-            const {
-                data: allPlayers,
-                error: positionError
-            } = await supabaseAdmin
-                .from<{ player_id: string; player_name: string; total_score: number; days_played: number; game_id: string }>("world_players")
-                .select(
-                    "player_id, player_name, total_score, days_played, game_id"
-                )
-                .eq(
-                    "game_id",
-                    RACE_TO_WIN_GAME_ID
-                )
-                .order(
-                    "total_score",
-                    { ascending: false }
-                );
+            try {
+                // Primero obtener los datos del jugador
+                const {
+                    data: playerScoreData,
+                    error: playerScoreError
+                } = await supabaseAdmin
+                    .from<{ player_id: string; player_name: string; total_score: number; days_played: number; game_id: string }>("world_players")
+                    .select(
+                        "player_id, player_name, total_score, days_played, game_id"
+                    )
+                    .eq("player_id", playerId)
+                    .eq("game_id", RACE_TO_WIN_GAME_ID)
+                    .single();
 
-            if (positionError) {
-                console.error(
-                    "Player position error:",
-                    positionError
-                );
-            } else {
-                const safeAllPlayers = allPlayers ?? [];
-                const index =
-                    safeAllPlayers.findIndex(
-                        (player: { player_id: string; player_name: string; total_score: number; days_played: number; game_id: string }) =>
-                            player.player_id ===
-                            playerId
+                if (!playerScoreError && playerScoreData) {
+                    playerData = playerScoreData;
+
+                    // Usar RPC para obtener la posición sin cargar todos los jugadores
+                    const {
+                        data: positionResult,
+                        error: positionError
+                    } = await supabaseAdmin.rpc(
+                        "get_player_position",
+                        {
+                            p_player_id: playerId,
+                            p_game_id: RACE_TO_WIN_GAME_ID
+                        }
                     );
 
-                if (index !== -1) {
-                    playerPosition =
-                        index + 1;
-
-                    playerData =
-                        safeAllPlayers[index];
+                    if (!positionError && positionResult) {
+                        playerPosition = positionResult.position;
+                    }
                 }
+            } catch (err) {
+                console.error("Error fetching player position:", err);
+                // No fallar la petición si esto falla, solo no devolver posición
             }
         }
 
