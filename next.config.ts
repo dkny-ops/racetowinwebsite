@@ -23,7 +23,29 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    // Cachear assets estáticos agresivamente
+    {
+      source: "/public/:path*",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=31536000, immutable",
+        },
+      ],
+    },
+    // Cachear game assets con expires largo
+    {
+      source: "/game/:path*",
+      headers: [
+        {
+          key: "Cache-Control",
+          value: "public, max-age=86400, stale-while-revalidate=604800",
+        },
+      ],
+    },
   ],
+  // Comprimir assets automáticamente
+  compress: true,
 };
 
 export default nextConfig;
